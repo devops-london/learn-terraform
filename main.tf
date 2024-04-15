@@ -3,9 +3,9 @@
 ##################################################################################
 
 provider "aws" {
-  access_key = ""
-  secret_key = ""
-  region     = "eu-west-2"
+  access_key = var.access_key
+  secret_key = var.secret_key
+  region     = var.aws_region
 }
 
 ##################################################################################
@@ -22,8 +22,8 @@ data "aws_ssm_parameter" "amzn2_linux" {
 
 # NETWORKING #
 resource "aws_vpc" "app" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
+  cidr_block           = var.vpc_cidr_block
+  enable_dns_hostnames = var.enable_dns_hostnames
 
 }
 
@@ -33,7 +33,7 @@ resource "aws_internet_gateway" "app" {
 }
 
 resource "aws_subnet" "public_subnet1" {
-  cidr_block              = "10.0.0.0/24"
+  cidr_block              = var.vpc_publiv_subnet_cidr_block
   vpc_id                  = aws_vpc.app.id
   map_public_ip_on_launch = true
 }
@@ -79,7 +79,7 @@ resource "aws_security_group" "nginx_sg" {
 # INSTANCES #
 resource "aws_instance" "nginx1" {
   ami                    = nonsensitive(data.aws_ssm_parameter.amzn2_linux.value)
-  instance_type          = "t2.micro"
+  instance_type          = var.instance_type
   subnet_id              = aws_subnet.public_subnet1.id
   vpc_security_group_ids = [aws_security_group.nginx_sg.id]
 
@@ -88,7 +88,7 @@ resource "aws_instance" "nginx1" {
 sudo amazon-linux-extras install -y nginx1
 sudo service nginx start
 sudo rm /usr/share/nginx/html/index.html
-echo '<html><head><title>Taco Team Server 1</title></head><body style=\"background-color:#1F778D\"><p style=\"text-align: center;\"><span style=\"color:#FFFFFF;\"><span style=\"font-size:28px;\">You did it! Have a &#127790;</span></span></p></body></html>' | sudo tee /usr/share/nginx/html/index.html
+echo '<html><head><title>Taco Team Server</title></head><body style=\"background-color:#1F778D\"><p style=\"text-align: center;\"><span style=\"color:#FFFFFF;\"><span style=\"font-size:28px;\">You did it! Have a &#127790;</span></span></p></body></html>' | sudo tee /usr/share/nginx/html/index.html
 EOF
 
 }
